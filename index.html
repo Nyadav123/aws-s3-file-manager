@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AWS S3 File Manager</title>
+  <style>
+    /* ===== GENERAL STYLES ===== */
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      padding: 30px;
+      width: 420px;
+      max-width: 95%;
+      text-align: center;
+    }
+    h2 { margin-bottom: 20px; color: #333; }
+    input[type="text"], input[type="password"], input[type="file"], select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #4e73df;
+      border: none;
+      color: #fff;
+      padding: 10px 20px;
+      margin: 10px 5px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover { background: #2e59d9; }
+    .hidden { display: none; }
+    #status { margin-top: 10px; font-weight: bold; color: #444; }
+    select { background: #f8f9fc; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- ===== LOGIN SECTION ===== -->
+    <div id="login-section">
+      <h2>🔐 Login</h2>
+      <input type="text" id="username" placeholder="Username">
+      <input type="password" id="password" placeholder="Password">
+      <button onclick="login()">Login</button>
+      <div id="status"></div>
+    </div>
+
+    <!-- ===== MAIN MENU ===== -->
+    <div id="menu-section" class="hidden">
+      <h2>Choose Operation</h2>
+      <button onclick="showUpload()">📤 Upload</button>
+      <button onclick="showDownload()">📥 Download</button>
+      <button onclick="showDelete()">🗑 Delete</button>
+      <button onclick="showCreateFolder()">📁 Create Folder</button>
+    </div>
+
+    <!-- ===== DYNAMIC ACTION SECTION ===== -->
+    <div id="action-section" class="hidden">
+      <h2 id="action-title"></h2>
+      <div id="action-body"></div>
+      <button onclick="backToMenu()">⬅ Back</button>
+    </div>
+
+  </div>
+
+  <script>
+    /* ===== CONFIG ===== */
+    // CloudFront URL that routes to API Gateway with API Key injected
+    const apiBase = "/submit";  
+    let authHeader = "";
+
+    /* ===== LOGIN FUNCTION ===== */
+    function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      if (!username || !password) {
+        document.getElementById("status").innerText = "❌ Please enter credentials";
+        return;
+      }
+
+      // Basic Auth header
+      authHeader = "Basic " + btoa(username + ":" + password);
+
+      // Test login by listing folders
+      fetch(apiBase + "/list", { headers: { Authorization: authHeader } })
+        .then(r => {
+          if (r.status === 401) throw new Error("Unauthorized");
+          return r.json();
+        })
+        .then(() => {
+          document.getElementById("login-section").classList.add("hidden");
+          document.getElementById("menu-section").classList.remove("hidden");
+          document.getElementById("status").innerText = "";
+        })
+        .catch(() => {
+          document.getElementById("status").innerText = "❌ Invalid credentials";
+        });
+    }
+
+    /* ===== NAVIGATION ===== */
+    function backToMenu() {
+      document.getElementById("action-section").classList.add("hidden");
+      document.getElementById("menu-section").classList.remove("hidden");
+    }
+
+    function showAction(title, html) {
+      document.getElementById("menu-section").classList.add("hidden");
+      document.getElementById("action-section").classList.remove("hidden");
+      document.getElementById("action-title").innerText = title;
+      document.getElementById("action-body").innerHTML = html;
+    }
+
+    /* ===== OPERATIONS ===== */
+    function showUpload() {
+      showAction("Upload File", `
+        <input type="file" id="fileInput"><br>
+        <input type="text" id="folderName" placeholder="Folder (optional)">
+        <button onclick="uploadFile()">Upload</button>
+      `);
+    }
+
+    async function showDownload() {
+      showAction("Download File", `<p>Loading files...</p>`);
+      const files = await listFiles();
+      if (!files.length) {
+        document.getElementById("action-body").innerHTML = "<p>No files available</p>";
+        return;
+      }
+      document.getElementById("action-body").innerHTML = `
+        <select id="downloadSelect">
+          ${files.map(f => `<option value="${f}">${f}</option>`).join("")}
+        </select>
+        <button onclick="downloadFile()">Download</button>
+      `;
+    }
+
+    async function showDelete() {
+      showAction("Delete File", `<p>Loading files...</p>`);
+      const files = await listFiles();
+      if (!files.length) {
+        document.getElementById("action-body").innerHTML = "<p>No files to delete</p>";
+        return;
+      }
+      document.getElementById("action-body").innerHTML = `
+        <select id="deleteSelect">
+          ${files.map(f => `<option value="${f}">${f}</option>`).join("")}
+        </select>
+        <button onclick="deleteFile()">Delete</button>
+      `;
+    }
+
+    function showCreateFolder() {
+      showAction("Create Folder", `
+        <input type="text" id="newFolder" placeholder="Enter folder name">
+        <button onclick="createFolder()">Create</button>
+      `);
+    }
+
+    /* ===== API CALLS ===== */
+    async function listFiles() {
+      try {
+        const res = await fetch(`${apiBase}/list-files`, { headers: { Authorization: authHeader } });
+        if (!res.ok) throw new Error("Unable to list files");
+        return await res.json();
+      } catch { return []; }
+    }
+
+    async function uploadFile() {
+      const fileInput = document.getElementById("fileInput");
+      const folder = document.getElementById("folderName").value.trim();
+      if (!fileInput.files.length) { alert("Select a file first"); return; }
+
+      const file = fileInput.files[0];
+      const base64Data = await fileToBase64(file);
+      const filename = folder ? `${folder}/${file.name}` : file.name;
+
+      const res = await fetch(`${apiBase}/put?filename=${encodeURIComponent(filename)}`, {
+        method: "PUT",
+        headers: { Authorization: authHeader },
+        body: base64Data
+      });
+      alert(await res.text());
+    }
+
+    async function downloadFile() {
+      const key = document.getElementById("downloadSelect").value;
+      const res = await fetch(`${apiBase}/get?filename=${encodeURIComponent(key)}`, { headers: { Authorization: authHeader } });
+      if (!res.ok) { alert("❌ Error downloading"); return; }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = key.split("/").pop();
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+
+    async function deleteFile() {
+      const key = document.getElementById("deleteSelect").value;
+      const res = await fetch(`${apiBase}/delete?filename=${encodeURIComponent(key)}`, {
+        method: "DELETE",
+        headers: { Authorization: authHeader }
+      });
+      alert(await res.text());
+    }
+
+    async function createFolder() {
+      let folderName = document.getElementById("newFolder").value.trim();
+      if (!folderName.endsWith("/")) folderName += "/";
+      const res = await fetch(`${apiBase}/put?filename=${encodeURIComponent(folderName)}`, {
+        method: "PUT",
+        headers: { Authorization: authHeader }
+      });
+      alert(await res.text());
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = err => reject(err);
+      });
+    }
+  </script>
+</body>
+</html>
