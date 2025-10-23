@@ -130,7 +130,7 @@ AWS API Gateway  ←→  AWS Lambda (Python)
 
 📸 Screenshots
 
-![Uploading image.png…]()
+<img width="1920" height="913" alt="s3" src="https://github.com/user-attachments/assets/4e3d858f-f811-4c3c-9b85-2b63a4004386" />
 
 
 ---
@@ -139,7 +139,7 @@ AWS API Gateway  ←→  AWS Lambda (Python)
 
 Nipun Yadav
 💼 DevOps & Cloud Engineer
-🌐 [LinkedIn](https://linkedin.com/in/nipun-yadav) | [GitHub](https://github.com/)
+🌐 [LinkedIn](https://www.linkedin.com/in/nipun-yadav-5bb736178/) | [GitHub](https://github.com/Nyadav123)
 
 ---
 
