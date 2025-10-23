@@ -15,13 +15,20 @@ A lightweight and secure web-based file manager built using AWS Lambda, API Gate
 🏗️ Architecture Overview
 
 ```
-Frontend (index.html)
-        |
-        ▼
-AWS CloudFront → API Gateway (with API Key) ←→ AWS Lambda (Python)
-        |
-        ▼
-      AWS S3 Bucket
+            User Browser
+                |
+                ▼
+      AWS CloudFront (Frontend)
+                |
+                ▼
+  /submit → API Gateway (with API Key)
+                |
+                ▼
+        AWS Lambda (Python)
+                |
+                ▼
+           AWS S3 Bucket
+
 ```
 
 * Frontend: HTML/CSS/JS
