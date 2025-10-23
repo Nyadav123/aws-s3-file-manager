@@ -2,7 +2,7 @@
 
 A lightweight and secure web-based file manager built using AWS Lambda, API Gateway, and S3 — allowing users to upload, download, delete, and create folders in an S3 bucket via a simple HTML interface.
 
-## 🚀 Features
+🚀 Features
 - 🔐 Basic Authentication using AWS Secrets Manager
 - ☁️ Fully Serverless – AWS Lambda + API Gateway + S3
 - 📤 Upload and create folders directly from the browser
@@ -11,7 +11,7 @@ A lightweight and secure web-based file manager built using AWS Lambda, API Gate
 - 🧾 Real-time file list from S3
 - 💡 Simple HTML + JavaScript frontend — no frameworks needed
 
-## 🏗️ Architecture Overview
+🏗️ Architecture Overview
 Frontend (index.html)
 |
 ▼
@@ -27,7 +27,7 @@ Copy code
 - Backend: Python (boto3 for AWS)
 - Authentication: AWS Secrets Manager (Basic Auth)
 
-## 🔧 Backend Setup (Lambda)
+🔧 Backend Setup (Lambda)
 1. Create an S3 bucket (e.g., `credit-websites-hosting`)
 2. Create a secret in AWS Secrets Manager (example JSON):
 ```json
@@ -99,11 +99,8 @@ Basic Auth over HTTPS
 
 Optional folder isolation via root_folder in secrets
 
-
 📸 Screenshots
-
 <img width="1920" height="913" alt="s3" src="https://github.com/user-attachments/assets/4e3d858f-f811-4c3c-9b85-2b63a4004386" />
-
 
 
 🧑‍💻 Author
