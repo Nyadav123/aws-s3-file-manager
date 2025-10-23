@@ -1,4 +1,4 @@
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/818d2eac-cd4b-4bd8-b2c8-9fbd5aad4b1b" />🗂️ AWS S3 File Manager
+🗂️ AWS S3 File Manager
 
 A lightweight and secure web-based file manager built using AWS Lambda, API Gateway, and S3 — allowing users to upload, download, delete, and create folders in an S3 bucket via a simple HTML interface.
 
